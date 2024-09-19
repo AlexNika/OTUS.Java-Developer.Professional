@@ -3,6 +3,7 @@ package ru.otus.java.pro.reflection;
 import ru.otus.java.pro.reflection.annotations.*;
 import ru.otus.java.pro.reflection.exceptions.*;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -16,36 +17,35 @@ public class TestRunner {
     private static final Logger logger = LogManager.getLogger(TestRunner.class);
     private static final int MIN_PRIORITY = 1;
     private static final int MAX_PRIORITY = 10;
-    private static int totalTests = 0;
     private static int successTests = 0;
+    private static int failedTests = 0;
 
     public static void run(@NotNull Class<?> testSuiteClass) {
-        if (isClassHasDisabledAnnotation(testSuiteClass)) return;
+        if (isClassHasDisabledAnnotation(testSuiteClass)) {
+            logger.info("The reason for disable is: {}", testSuiteClass.getAnnotation(Disabled.class).message());
+            return;
+        }
         Method beforeSuiteMethod = null;
         Method afterSuiteMethod = null;
-        int beforeSuiteAnnotationCount = 0;
-        int afterSuiteAnnotationCount = 0;
         Map<Method, Integer> orderedTestsByPriority = new HashMap<>();
         Method[] methods = testSuiteClass.getDeclaredMethods();
-        totalTests = methods.length;
         for (Method m : methods) {
-            int annotationsCount = m.getDeclaredAnnotations().length;
-            if (isMethodHasNoAnyAnnotations(m, annotationsCount)) continue;
+            if (isMethodHasIncorrectMarkUp(m)) {
+                throw new AnnotationMarkupException("Incorrect annotation markup in the method '" + m.getName() + "'");
+            }
+            if (isMethodHasNoAnyAnnotations(m)) continue;
             if (isMethodHasDisabledAnnotation(m)) continue;
-            if (isMethodHasMoreThenOneAnnotation(m, annotationsCount)) continue;
             if (m.isAnnotationPresent(Test.class)) {
                 int priority = m.getDeclaredAnnotation(Test.class).priority();
                 if (isPriorityLimitsExceeded(priority)) continue;
                 orderedTestsByPriority.put(m, priority);
             }
             if (m.isAnnotationPresent(BeforeSuite.class)) {
-                beforeSuiteAnnotationCount++;
-                if (isClassHasIdenticalAnnotations(beforeSuiteAnnotationCount, BeforeSuite.class)) continue;
+                if (isClassHasIdenticalAnnotations(beforeSuiteMethod, BeforeSuite.class)) continue;
                 beforeSuiteMethod = m;
             }
             if (m.isAnnotationPresent(AfterSuite.class)) {
-                afterSuiteAnnotationCount++;
-                if (isClassHasIdenticalAnnotations(afterSuiteAnnotationCount, AfterSuite.class)) continue;
+                if (isClassHasIdenticalAnnotations(afterSuiteMethod, AfterSuite.class)) continue;
                 afterSuiteMethod = m;
             }
         }
@@ -64,9 +64,10 @@ public class TestRunner {
         }
         try {
             m.invoke(null);
-            successTests++;
+            if (m.isAnnotationPresent(Test.class)) successTests++;
         } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            if (m.isAnnotationPresent(Test.class)) failedTests++;
+            logger.error("Test '{}' with annotation failed", m.getName());
         }
     }
 
@@ -82,10 +83,11 @@ public class TestRunner {
         return false;
     }
 
-    private static boolean isClassHasIdenticalAnnotations(int count, Class<?> annotation) {
+    private static boolean isClassHasIdenticalAnnotations(Method method, Class<?> annotation) {
         try {
-            if (count > 1) {
-                throw new AnnotationCountException("Duplicate annotation in class!");
+            if (method != null) {
+                throw new AnnotationCountException("Duplicate annotation '@" + annotation.getSimpleName() +
+                        "' in class!");
             }
         } catch (AnnotationCountException e) {
             logger.error("There is more than one identical annotation '@{}' in the class. Skip running it!",
@@ -95,9 +97,19 @@ public class TestRunner {
         return false;
     }
 
-    private static boolean isMethodHasMoreThenOneAnnotation(Method m, int annotationsCount) {
-        if (annotationsCount > 1 && !m.isAnnotationPresent(Disabled.class)) {
-            logger.info("Method '{}' - has more than one annotation. Skip running it!", m.getName());
+    private static boolean isMethodHasIncorrectMarkUp(@NotNull Method m) {
+        Annotation[] annotations = m.getDeclaredAnnotations();
+        if (annotations.length <= 1) return false;
+        if (m.isAnnotationPresent(Disabled.class)) return false;
+        if ((m.isAnnotationPresent(BeforeSuite.class) && (m.isAnnotationPresent(AfterSuite.class)))) {
+            logger.info("Method '{}' - has incorrect markup. It has '@BeforeSuite' and '@AfterSuite' " +
+                    "annotations at the same time!", m.getName());
+            return true;
+        }
+        if ((m.isAnnotationPresent(BeforeSuite.class) || m.isAnnotationPresent(AfterSuite.class)) &&
+                m.isAnnotationPresent(Test.class)) {
+            logger.info("Method '{}' - has incorrect markup. It has '@BeforeSuite' or '@AfterSuite' and " +
+                    "'@Test' annotations at the same time!", m.getName());
             return true;
         }
         return false;
@@ -111,8 +123,9 @@ public class TestRunner {
         return false;
     }
 
-    private static boolean isMethodHasNoAnyAnnotations(@NotNull Method m, int annotationsCount) {
-        if (annotationsCount == 0) {
+    private static boolean isMethodHasNoAnyAnnotations(@NotNull Method m) {
+        Annotation[] annotations = m.getDeclaredAnnotations();
+        if (annotations.length == 0) {
             logger.info("Method '{}' - has no any annotation. Skip running it!", m.getName());
             return true;
         }
@@ -129,7 +142,7 @@ public class TestRunner {
     }
 
     public static int getTotalTests() {
-        return totalTests;
+        return successTests + failedTests;
     }
 
     public static int getSuccessTests() {
@@ -137,6 +150,6 @@ public class TestRunner {
     }
 
     public static int getFailedTests() {
-        return totalTests - successTests;
+        return failedTests;
     }
 }

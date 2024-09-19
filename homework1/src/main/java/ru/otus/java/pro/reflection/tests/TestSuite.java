@@ -25,12 +25,6 @@ public class TestSuite {
         logger.info("setUpTest2(): test method with second annotation '@BeforeSuite'");
     }
 
-    @Test
-    @BeforeSuite
-    public static void test2Annotations() {
-        logger.info("test2Annotations(): test method with two annotations ('@Test' and '@BeforeSuite')");
-    }
-
     @Test(priority = 100)
     public static void testIllegalPriority() {
         logger.info("testIllegalPriority(): test method with illegal(100) priority in annotation '@Test'");
@@ -70,10 +64,25 @@ public class TestSuite {
     @Disabled(message = "test with non default priority 9 has been disabled")
     public static void disabledTest() {
         logger.info("disabledTest(): test method with disabled annotation");
+
     }
 
     @AfterSuite
     public static void tearDownTest() {
         logger.info("tearDownTest(): test method with an annotation '@AfterSuite'");
+    }
+
+    @Disabled(message = "Disable incorrectly marked up test")
+    @Test
+    @AfterSuite
+    public static void testWithIncorrectMarkUp() {
+        logger.info("testWithIncorrectMarkUp(): test method with two annotations ('@Test' and '@AfterSuite')");
+    }
+
+    @Disabled(message = "Disable incorrectly marked up test")
+    @BeforeSuite
+    @AfterSuite
+    public static void test2WithIncorrectMarkUp() {
+        logger.info("test2WithIncorrectMarkUp(): test method with two annotations ('@Test' and '@AfterSuite')");
     }
 }
