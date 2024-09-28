@@ -1,2 +1,3 @@
-rootProject.name = 'HomeWorks'
-
+rootProject.name = 'otus-java-pro'
+include 'homework1'
+include 'homework3'
