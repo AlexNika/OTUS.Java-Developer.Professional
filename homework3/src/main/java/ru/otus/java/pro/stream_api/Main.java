@@ -19,9 +19,11 @@ public class Main {
         tasks = getTaskStream();
         logger.info("Tasks with status = '{}': {}", FAILED.name(), getTasksFilteredByStatus(tasks, FAILED));
         tasks = getTaskStream();
-        logger.info("Task with id = {}: {}", 9, (isTaskAvailableByID(tasks, 9) ? "available":"not available"));
+        logger.info("Task with id = {}: {}", 9, (Boolean.TRUE.equals(isTaskAvailableByID(tasks, 9))
+                ? "available":"not available"));
         tasks = getTaskStream();
-        logger.info("Task with id = {}: {}", 19, (isTaskAvailableByID(tasks, 19) ? "available":"not available"));
+        logger.info("Task with id = {}: {}", 19, (Boolean.TRUE.equals(isTaskAvailableByID(tasks, 19))
+                ? "available":"not available"));
         tasks = getTaskStream();
         logger.info("Tasks sorted by status {}", getTasksSortedByStatus(tasks));
         tasks = getTaskStream();
@@ -33,11 +35,11 @@ public class Main {
 
     private static @NotNull List<Task> getTasksFilteredByStatus(@NotNull Stream<Task> tasks, Status status) {
         return tasks
-                .filter(task -> task.status().equals(status))
+                .filter(task -> task.status() == status)
                 .toList();
     }
 
-    private static @NotNull Boolean isTaskAvailableByID(@NotNull Stream<Task> tasks, long id) {
+    private static Boolean isTaskAvailableByID(@NotNull Stream<Task> tasks, long id) {
         return tasks
                 .anyMatch(task -> task.id() == id);
     }
