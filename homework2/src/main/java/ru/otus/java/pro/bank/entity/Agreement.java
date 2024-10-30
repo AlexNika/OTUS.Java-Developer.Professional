@@ -6,6 +6,13 @@ public class Agreement {
 
     private String name;
 
+    public Agreement() {}
+
+    public Agreement(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }

@@ -9,6 +9,7 @@ import ru.otus.java.pro.bank.service.exception.AccountException;
 import java.math.BigDecimal;
 
 public class PaymentProcessorImpl implements PaymentProcessor {
+    static final String EXCEPTIONTEXT = "Account not found";
     private AccountService accountService;
 
     public PaymentProcessorImpl(AccountService accountService) {
@@ -21,12 +22,12 @@ public class PaymentProcessorImpl implements PaymentProcessor {
         Account sourceAccount = accountService.getAccounts(source).stream()
                 .filter(account -> account.getType() == sourceType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException(EXCEPTIONTEXT));
 
         Account destinationAccount = accountService.getAccounts(destination).stream()
                 .filter(account -> account.getType() == destinationType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException(EXCEPTIONTEXT));
 
         return accountService.makeTransfer(sourceAccount.getId(), destinationAccount.getId(), amount);
     }
@@ -35,19 +36,19 @@ public class PaymentProcessorImpl implements PaymentProcessor {
     public boolean makeTransferWithComission(Agreement source, Agreement destination,
                                              int sourceType, int destinationType,
                                              BigDecimal amount,
-                                             BigDecimal comissionPercent) {
+                                             BigDecimal commissionPercent) {
 
         Account sourceAccount = accountService.getAccounts(source).stream()
                 .filter(account -> account.getType() == sourceType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException(EXCEPTIONTEXT));
 
         Account destinationAccount = accountService.getAccounts(destination).stream()
                 .filter(account -> account.getType() == destinationType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException(EXCEPTIONTEXT));
 
-        accountService.charge(sourceAccount.getId(), amount.negate().multiply(comissionPercent));
+        accountService.charge(sourceAccount.getId(), amount.negate().multiply(commissionPercent));
 
         return accountService.makeTransfer(sourceAccount.getId(), destinationAccount.getId(), amount);
     }
