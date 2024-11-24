@@ -57,8 +57,8 @@ class AccountServiceImplTest {
             destinationAccount = new Account();
             destinationAccount.setAmount(destAmount);
 
-            lenient().when(accountDao.findById(1L)).thenReturn(Optional.of(sourceAccount));
-            lenient().when(accountDao.findById(2L)).thenReturn(Optional.of(destinationAccount));
+            lenient().when(accountDao.findById(1L)).thenReturn(Optional.ofNullable(sourceAccount));
+            lenient().when(accountDao.findById(2L)).thenReturn(Optional.ofNullable(destinationAccount));
         }
 
         @Test
@@ -144,7 +144,7 @@ class AccountServiceImplTest {
 
             List<Account> actualAccounts = accountServiceImpl.getAccounts();
 
-            assertArrayEquals(expectedAccounts.toArray(), actualAccounts.toArray());
+            assertIterableEquals(expectedAccounts, actualAccounts);
             verify(accountDao).findAll();
         }
 
