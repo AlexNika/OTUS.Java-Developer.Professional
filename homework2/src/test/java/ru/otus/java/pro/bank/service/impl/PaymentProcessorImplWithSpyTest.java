@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.STRICT_STUBS)
-public class PaymentProcessorImplWithSpyTest {
+class PaymentProcessorImplWithSpyTest {
 
     @Mock
     AccountDao accountDao;
@@ -41,7 +41,7 @@ public class PaymentProcessorImplWithSpyTest {
     }
 
     @Test
-    public void testTransfer() {
+    void makeTransferTest() {
         Agreement sourceAgreement = new Agreement();
         sourceAgreement.setId(1L);
 
@@ -74,14 +74,11 @@ public class PaymentProcessorImplWithSpyTest {
 
         when(accountDao.findById(10L)).thenReturn(Optional.of(sourceAccount));
         when(accountDao.findById(20L)).thenReturn(Optional.of(destinationAccount));
-//        when(accountDao.findById(30L)).thenReturn(Optional.of(destinationAccount));
 
         paymentProcessor.makeTransfer(sourceAgreement, destinationAgreement,
                 0, 0, BigDecimal.ONE);
 
         assertEquals(new BigDecimal(9), sourceAccount.getAmount());
         assertEquals(BigDecimal.ONE, destinationAccount.getAmount());
-
     }
-
 }
