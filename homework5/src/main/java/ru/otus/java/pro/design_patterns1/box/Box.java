@@ -40,7 +40,7 @@ public class Box implements Collection {
 
         @Override
         public boolean hasNext() {
-            return nestingIndex < nestedDollsQty;
+            return nestingIndex < nestedDollsQty && dollIndex < listOfDolls.size();
         }
 
         @Override
@@ -66,7 +66,7 @@ public class Box implements Collection {
 
         @Override
         public boolean hasNext() {
-            return (nestingIndex < nestedDollsQty) && (dollIndex < listOfDolls.size());
+            return nestingIndex < nestedDollsQty && dollIndex < listOfDolls.size();
         }
 
         @Override
