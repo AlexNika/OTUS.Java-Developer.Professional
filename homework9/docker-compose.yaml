@@ -1,0 +1,14 @@
+services:
+  tomcat:
+    user: root
+    restart: always
+    container_name: tomcat
+    image: tomcat:latest
+    privileged: true
+    environment:
+      - TZ="Europe/Moscow"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /d/OTUS/Java Developer.Professional/HomeWorks/homework9/tomcat/conf:/usr/local/tomcat/conf
+      - /d/OTUS/Java Developer.Professional/HomeWorks/homework9/build/libs:/usr/local/tomcat/webapps
