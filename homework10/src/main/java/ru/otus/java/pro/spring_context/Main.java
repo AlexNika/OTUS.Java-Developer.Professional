@@ -11,30 +11,30 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CtxConfig.class);
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CtxConfig.class)) {
+            ProductRepository productRepository = ctx.getBean(ProductRepository.class);
+            Cart cartOne = ctx.getBean(Cart.class);
+            Cart cartTwo = ctx.getBean(Cart.class);
 
-        ProductRepository productRepository = ctx.getBean(ProductRepository.class);
-        logger.info("Product repository contains: {}", productRepository.findAll());
-        logger.info("Find by id:{} in repository: {}", 5, productRepository.findById(5));
+            logger.info("Product repository contains: {}", productRepository.findAll());
+            logger.info("Find by id:{} in repository: {}", 5, productRepository.findById(5));
 
-        Cart cartOne = ctx.getBean(Cart.class, productRepository);
-        Cart cartTwo = ctx.getBean(Cart.class, productRepository);
+            cartOne.addProductById(42);
+            cartOne.addProductById(1);
+            cartOne.addProductById(2);
+            cartOne.addProductById(3);
+            logger.info("cartOne: {}", cartOne);
+            cartOne.deleteProductById(7);
+            cartOne.deleteProductById(2);
+            logger.info("cartOne: {}", cartOne);
 
-        cartOne.addProductById(42);
-        cartOne.addProductById(1);
-        cartOne.addProductById(2);
-        cartOne.addProductById(3);
-        logger.info("cartOne: {}", cartOne);
-        cartOne.deleteProductById(7);
-        cartOne.deleteProductById(2);
-        logger.info("cartOne: {}", cartOne);
-
-        cartTwo.addProductById(6);
-        cartTwo.addProductById(7);
-        cartTwo.addProductById(8);
-        logger.info("cartTwo: {}", cartTwo);
-        cartTwo.deleteProductById(2);
-        cartTwo.deleteProductById(7);
-        logger.info("cartTwo: {}", cartTwo);
+            cartTwo.addProductById(6);
+            cartTwo.addProductById(7);
+            cartTwo.addProductById(8);
+            logger.info("cartTwo: {}", cartTwo);
+            cartTwo.deleteProductById(2);
+            cartTwo.deleteProductById(7);
+            logger.info("cartTwo: {}", cartTwo);
+        }
     }
 }

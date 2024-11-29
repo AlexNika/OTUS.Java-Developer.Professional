@@ -30,7 +30,7 @@ public class Cart {
         Optional<Product> product = productRepository.findById(id);
         logger.debug("addProductById: id={}, Product findById={}", id, product);
         if (product.isEmpty()) {
-            logger.info("addProductById: ProductRepository doesn't contains product with id={}", id);
+            logger.info("addProductById: ProductRepository doesn't contain the product with id={}", id);
         } else {
             cartContent.add(product.get());
         }
@@ -43,13 +43,12 @@ public class Cart {
             logger.info("deleteProductById: ProductRepository doesn't contains product with id={}", id);
         } else {
             if (!cartContent.contains(product.get())) {
-                logger.info("deleteProductById: Cart doesn't contains product with id={}", id);
+                logger.info("deleteProductById: Cart doesn't contain the product with id={}", id);
             } else {
                 cartContent.removeIf(p -> Objects.equals(p, product.get()));
                 logger.info("Product with id:{} deleted from cart", id);
             }
         }
-
     }
 
     @Override
