@@ -11,6 +11,7 @@ import ru.otus.java.pro.springboot.part1.homework11.entities.Product;
 import ru.otus.java.pro.springboot.part1.homework11.services.ProductsServiceImpl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @RestController
@@ -30,22 +31,27 @@ public class ProductsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getItemById(@PathVariable Long id) {
-        Product product;
-        try {
-            product = productsServiceImpl.getProductById(id).orElseThrow();
-            return new ResponseEntity<>(product, HttpStatus.OK);
-        } catch (Exception e) {
+        Optional<Product> productOptional = productsServiceImpl.getProductById(id);
+        if (productOptional.isEmpty()) {
             logger.info("Product with id {} not found", id);
             return new ResponseEntity<>(new AppError(HttpStatus.NOT_FOUND.value(),
                     "Product with id " + id + " not found"),
                     HttpStatus.NOT_FOUND);
         }
+        Product product = productOptional.get();
+        return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> createNewItem(@RequestBody ProductDto productDto) {
-        Product product;
-        product = productsServiceImpl.createNewItem(productDto).orElseThrow();
+    public ResponseEntity<?> createNewItem(@RequestBody ProductDto productDto) {
+        Optional<Product> productOptional = productsServiceImpl.createNewItem(productDto);
+        if (productOptional.isEmpty()) {
+            logger.info("Unable to create product: {}", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),
+                    "Unable to create product"),
+                    HttpStatus.BAD_REQUEST);
+        }
+        Product product = productOptional.get();
         return new ResponseEntity<>(new ProductDto(product.getId(), product.getProductName(),
                 product.getPrice()), HttpStatus.CREATED);
     }
