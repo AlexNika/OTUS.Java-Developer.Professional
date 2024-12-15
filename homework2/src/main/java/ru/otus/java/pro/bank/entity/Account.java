@@ -3,8 +3,18 @@ package ru.otus.java.pro.bank.entity;
 import java.math.BigDecimal;
 
 public class Account {
+    public Account() {}
+
+    public Account(long id, BigDecimal amount, Integer type, String number, Long agreementId) {
+        this.id = id;
+        this.amount = amount;
+        this.type = type;
+        this.number = number;
+        this.agreementId = agreementId;
+    }
 
     private long id;
+
     private BigDecimal amount;
 
     private Integer type;

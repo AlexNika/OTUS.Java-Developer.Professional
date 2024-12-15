@@ -1,0 +1,9 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: homework11
+logging:
+  level:
+    root: "info"
+    org.springframework.web: "debug"
