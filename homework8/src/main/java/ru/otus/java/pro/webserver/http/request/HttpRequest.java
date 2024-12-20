@@ -1,108 +1,114 @@
 package ru.otus.java.pro.webserver.http.request;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Getter
 public class HttpRequest {
     private static final Logger logger = LogManager.getLogger(HttpRequest.class.getName());
 
-    @Getter(AccessLevel.NONE)
-    private final String rawRequest;
+    private final InputStream in;
+    private final int initialRequestSize;
     private String uri;
     private HttpMethod method;
+    private String version;
     private HttpAccept accept;
-    private Map<String, String> parameters;
-    private Map<String, String> headers;
+    private final Map<String, String> parameters;
+    private final Map<String, String> headers;
     private String body;
-    @Getter(AccessLevel.NONE)
-    private List<String> lines;
-    @Getter(AccessLevel.NONE)
-    private final int splitLinesIndex;
+
+    public HttpRequest(@NotNull InputStream in) throws IOException {
+        this.in = in;
+        this.initialRequestSize = in.available();
+        this.headers = new HashMap<>();
+        this.parameters = new HashMap<>();
+        this.parseHttpRequest();
+        this.parseAcceptType();
+    }
 
     public String getRoutingKey() {
         return method + " " + uri;
     }
 
-    public HttpRequest(String rawRequest) {
-        this.rawRequest = rawRequest;
-        this.splitLinesIndex = getSplitLinesIndex();
-        this.parseRequestLine();
-        this.parseRequestHeader();
-        this.parseAcceptType();
-        this.parseRequestBody();
+    public void parseHttpRequest() {
+        logger.info("Method 'parseHttpRequest' started");
+        try {
+            int chunk;
+            int bufferSize;
+            int currentRequestSize = initialRequestSize;
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            while (currentRequestSize != 0) {
+                for (chunk = in.read(); chunk != '\n' && chunk != -1; chunk = in.read()) {
+                    buffer.write(chunk);
+                }
+                bufferSize = buffer.size() - 1;
+                byte[] bufferByteArray = Arrays.copyOfRange(buffer.toByteArray(), 0, bufferSize);
+                logger.debug("buffer (+CR) -> {}", buffer);
+                if (currentRequestSize == initialRequestSize) {
+                    parseFirstLine(bufferByteArray);
+                }
+                if (currentRequestSize != initialRequestSize && bufferSize != 0) {
+                    parseHeaderLines(bufferByteArray);
+                }
+                if (currentRequestSize != initialRequestSize && bufferSize == 0 && parseBodyLines(currentRequestSize))
+                    bufferSize = currentRequestSize - 2;
+
+                currentRequestSize = currentRequestSize - bufferSize - 2;
+                buffer.reset();
+            }
+            logger.info("Method 'parseHttpRequest' finished");
+        } catch (IOException e) {
+            logger.error("The error occurred during http request parsing process: {}", e.getMessage());
+        }
     }
 
-    private void parseRequestLine() {
-        String requestLine = lines.getFirst();
-        int startIndex = requestLine.indexOf(" ");
-        int endIndex = requestLine.indexOf(" ", startIndex + 1);
-        this.uri = requestLine.substring(startIndex + 1, endIndex);
-        this.method = HttpMethod.valueOf(requestLine.substring(0, startIndex));
-        this.parameters = new HashMap<>();
-        if (uri.contains("?")) {
-            String[] elements = uri.split("[?]");
-            this.uri = elements[0];
-            String[] keysValues = elements[1].split("&");
-            for (String o : keysValues) {
-                String[] keyValue = o.split("=");
-                this.parameters.put(keyValue[0], keyValue[1]);
+    private void parseFirstLine(byte @NotNull [] buffer) {
+        logger.debug("Try to parse byte array of request first line");
+        List<byte[]> bytesList;
+        bytesList = splitLine(buffer, new byte[]{32});
+        if (bytesList.isEmpty()) return;
+        this.method = HttpMethod.valueOf(new String(bytesList.get(0), StandardCharsets.UTF_8));
+        this.uri = new String(bytesList.get(1), StandardCharsets.UTF_8);
+        this.version = new String(bytesList.get(2), StandardCharsets.UTF_8);
+        bytesList = splitLine(bytesList.get(1), new byte[]{63});
+        if (bytesList.size() > 1) {
+            this.uri = new String(bytesList.get(0), StandardCharsets.UTF_8);
+            bytesList = splitLine(bytesList.get(1), new byte[]{38});
+            for (byte[] bytes : bytesList) {
+                List<byte[]> bytesParameters;
+                bytesParameters = splitLine(bytes, new byte[]{61});
+                this.parameters.put(new String(bytesParameters.get(0), StandardCharsets.UTF_8),
+                        new String(bytesParameters.get(1), StandardCharsets.UTF_8));
             }
         }
     }
 
-    private void parseRequestHeader() {
-        this.headers = new HashMap<>();
-        for (String line : lines.subList(1, splitLinesIndex)) {
-            String[] headerComponents = line.split(": ");
-            headers.put(headerComponents[0].trim(), headerComponents[1].trim());
-        }
+    private void parseHeaderLines(byte @NotNull [] buffer) {
+        logger.debug("Try to parse byte array of request headers line");
+        List<byte[]> bytesList;
+        bytesList = splitLine(buffer, new byte[]{58, 32});
+        if (bytesList.isEmpty()) return;
+        this.headers.put(new String(bytesList.get(0), StandardCharsets.UTF_8),
+                new String(bytesList.get(1), StandardCharsets.UTF_8));
     }
 
-    private void parseRequestBody() {
-        if (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.PATCH) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (String line : lines.subList(splitLinesIndex, lines.size())) {
-                stringBuilder.append(line);
-            }
-            this.body = stringBuilder.toString();
+    private boolean parseBodyLines(int currentRequestSize) throws IOException {
+        logger.debug("Try to parse byte array of request body line");
+        byte[] bodyBuffer = new byte[currentRequestSize - 2];
+        if (in.read(bodyBuffer) != -1) {
+            this.body = new String(bodyBuffer, StandardCharsets.UTF_8);
+            return true;
         }
-    }
-
-    public void unhideDebugInfo() {
-        logger.debug("Uri: {}", this.uri);
-        logger.debug("Http Method: {}", this.method);
-        if (this.body != null) {
-            logger.debug("body: {}", this.body);
-        } else {
-            logger.debug("body: null");
-        }
-        if (this.parameters != null && !this.parameters.isEmpty()) {
-            for (Map.Entry<String, String> entry : this.parameters.entrySet()) {
-                logger.debug("Uri parameters: {}: {}", entry.getKey(), entry.getValue());
-            }
-        }
-        if (this.headers != null && !this.headers.isEmpty()) {
-            for (Map.Entry<String, String> entry : this.headers.entrySet()) {
-                logger.debug("Headers: {}: {}", entry.getKey(), entry.getValue());
-            }
-        }
-        logger.debug("rawRequest:\n{}", rawRequest);
-    }
-
-    private int getSplitLinesIndex() {
-        if (this.lines == null) {
-            this.lines = rawRequest.lines().toList();
-        }
-        return (int) lines.stream()
-                .takeWhile(s -> !s.isEmpty())
-                .count();
+        return false;
     }
 
     private void parseAcceptType() {
@@ -112,5 +118,45 @@ public class HttpRequest {
         } else {
             accept = HttpAccept.ANY;
         }
+    }
+
+    private @NotNull List<byte[]> splitLine(byte @NotNull [] input, byte[] pattern) {
+        logger.debug("Try to split input byte array by pattern byte array");
+        if (input.length == 0) {
+            return Collections.emptyList();
+        }
+        List<byte[]> bytes = new LinkedList<>();
+        int blockStart = 0;
+        for (int i = 0; i < input.length; i++) {
+            if (isMatch(pattern, input, i)) {
+                bytes.add(Arrays.copyOfRange(input, blockStart, i));
+                blockStart = i + pattern.length;
+                i = blockStart;
+            }
+        }
+        bytes.add(Arrays.copyOfRange(input, blockStart, input.length));
+        return bytes;
+    }
+
+    @Contract(pure = true)
+    private boolean isMatch(byte @NotNull [] pattern, byte[] input, int pos) {
+        for (int i = 0; i < pattern.length; i++) {
+            if (pattern[i] != input[pos + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpRequest{" +
+                "uri='" + uri + '\'' +
+                ", method=" + method +
+                ", version='" + version + '\'' +
+                ", parameters=" + parameters +
+                ", headers=" + headers +
+                ", body='" + body + '\'' +
+                '}';
     }
 }

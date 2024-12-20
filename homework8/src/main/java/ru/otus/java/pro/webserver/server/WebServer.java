@@ -5,10 +5,9 @@ import org.apache.logging.log4j.Logger;
 import ru.otus.java.pro.webserver.config.Config;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.UnknownHostException;
+import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class WebServer {
     private static final Logger logger = LogManager.getLogger(WebServer.class.getName());
@@ -35,18 +34,27 @@ public class WebServer {
     }
 
     public void start() {
-        logger.debug("Web Server started - Host: {}, Port: {}.", serverIpAddress, serverPort);
+        logger.info("Web Server started - Host: {}, Port: {}.", serverIpAddress, serverPort);
+        Dispatcher dispatcher = new Dispatcher();
         try (ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.setReceiveBufferSize(requestSize);
             serverSocket.bind(new InetSocketAddress(serverIpAddress, serverPort));
-            Connector connector = new Connector()
-                    .addServerSocket(serverSocket)
-                    .addThreadPoolSize(threadPoolSize)
-                    .addRequestSize(requestSize)
-                    .addServerOperationStatus(true);
-            connector.connect();
+            try (ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize)) {
+                while (serverSocket.isBound() && !serverSocket.isClosed()) {
+                    Socket clientSocket = serverSocket.accept();
+                    clientSocket.setReceiveBufferSize(requestSize);
+                    if (!dispatcher.isServerOperationStatus()) {
+                        logger.debug("Web Server shutdown forcibly on demand command '/shutdown'");
+                        clientSocket.close();
+                        break;
+                    }
+                    threadPool.execute(new RequestHandler(clientSocket, dispatcher));
+                }
+            }
         } catch (IOException e) {
             logger.error("Socket accept error on the Web Server - Host: {}, Port: {}.", serverIpAddress,
                     serverPort);
         }
+        logger.info("Web Server finished");
     }
 }
