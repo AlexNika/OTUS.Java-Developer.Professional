@@ -1,0 +1,15 @@
+server:
+  port: 8181
+  servlet:
+    context-path: /hw14
+spring:
+  application:
+    name: Homework14Application
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/homework14
+    username: postgres
+    password: example
+logging:
+  level:
+    org.springframework.jdbc.core.JdbcTemplate: TRACE
