@@ -54,10 +54,16 @@ public class AbstractRepository<T> {
 
     public void save(T entity) {
         logger.info("Method 'Save' started, entity: {}", entity);
+        List<Field> entityFieldList = List.of(entity.getClass().getDeclaredFields());
         try {
             for (int i = 0; i < wrappedFieldList.size() - 1; i++) {
-                psInsert.setObject(i + 1,
-                        wrappedFieldList.get(i).getGetter().invoke(entity));
+                if (entityFieldList.contains(wrappedFieldList.get(i).getField()) &&
+                        entityFieldList.get(i) != null) {
+                    psInsert.setObject(i + 1,
+                            wrappedFieldList.get(i).getGetter().invoke(entity));
+                } else {
+                    throw new ORMException("The entity object is not valid. Not all required fields are set ");
+                }
             }
             logger.debug("psInsert: {}", psInsert);
             psInsert.executeUpdate();
@@ -70,10 +76,16 @@ public class AbstractRepository<T> {
 
     public void update(T entity) {
         logger.info("Method 'Update' started, entity: {}", entity);
+        List<Field> entityFieldList = List.of(entity.getClass().getDeclaredFields());
         try {
             for (int i = 0; i < wrappedFieldList.size(); i++) {
-                psUpdate.setObject(i + 1,
-                        wrappedFieldList.get(i).getGetter().invoke(entity));
+                if (entityFieldList.contains(wrappedFieldList.get(i).getField()) &&
+                        entityFieldList.get(i) != null) {
+                    psUpdate.setObject(i + 1,
+                            wrappedFieldList.get(i).getGetter().invoke(entity));
+                } else {
+                    throw new ORMException("The entity object is not valid. Not all required fields are set ");
+                }
             }
             logger.debug("psUpdate: {}", psUpdate);
             int result = psUpdate.executeUpdate();
@@ -91,20 +103,21 @@ public class AbstractRepository<T> {
         try {
             psFindById.setLong(1, id);
             logger.debug("psFindById: {}", psFindById);
-            ResultSet rs = psFindById.executeQuery();
-            while (rs.next()) {
-                newEntity = createNewEntity();
-                T finalNewEntity = newEntity;
-                wrappedFieldList
-                        .forEach(f -> {
-                            try {
-                                f.getSetter().invoke(finalNewEntity, rs.getObject(f.getField().getName()));
-                            } catch (IllegalAccessException | InvocationTargetException | SQLException e) {
-                                logger.error(e.getMessage());
-                            }
-                        });
+            try (ResultSet rs = psFindById.executeQuery()) {
+                while (rs.next()) {
+                    newEntity = createNewEntity();
+                    T finalNewEntity = newEntity;
+                    wrappedFieldList
+                            .forEach(f -> {
+                                try {
+                                    f.getSetter().invoke(finalNewEntity, rs.getObject(f.getField().getName()));
+                                } catch (IllegalAccessException | InvocationTargetException | SQLException e) {
+                                    logger.error(e.getMessage());
+                                }
+                            });
+                }
+                logger.debug("New entity: {}", newEntity);
             }
-            logger.debug("New entity: {}", newEntity);
         } catch (SQLException e) {
             logger.error(e.getMessage());
             throw new ORMException("Something went wrong when trying to find entity by id in DB: " + id);
@@ -117,9 +130,8 @@ public class AbstractRepository<T> {
         logger.info("Method 'findAll' started");
         T newEntity;
         List<T> newEntitiesList = new ArrayList<>();
-        try {
-            logger.debug("psFindAll: {}", psFindAll);
-            ResultSet rs = psFindAll.executeQuery();
+        logger.debug("psFindAll: {}", psFindAll);
+        try (ResultSet rs = psFindAll.executeQuery()) {
             while (rs.next()) {
                 newEntity = createNewEntity();
                 T finalNewEntity = newEntity;
@@ -133,7 +145,6 @@ public class AbstractRepository<T> {
                         });
                 newEntitiesList.add(finalNewEntity);
             }
-
         } catch (SQLException e) {
             logger.error(e.getMessage());
             throw new ORMException("Something went wrong when trying to find all entities in DB");

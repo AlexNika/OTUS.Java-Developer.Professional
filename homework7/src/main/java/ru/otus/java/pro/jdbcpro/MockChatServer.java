@@ -25,18 +25,18 @@ public class MockChatServer {
 
             AbstractRepository<User> usersRepository = new AbstractRepository<>(dataSource, User.class);
 
-            usersRepository.save(new User(null, "User1", "Password1", "NickName1"));
-            usersRepository.save(new User(null, "User2", "Password2", "NickName2"));
-            usersRepository.save(new User(null, "User3", "Password3", "NickName3"));
+            usersRepository.save(new User("User1", "Password1", "NickName1"));
+            usersRepository.save(new User("User2", "Password2", "NickName2"));
+            usersRepository.save(new User("User3", "Password3", "NickName3"));
             logger.info(usersRepository.findById(2L));
             usersRepository.update(new User(3L, "User3.1", "Password3.1", "Nickname3.1"));
-            usersRepository.save(new User(null, "User4", "Password4", "NickName4"));
+            usersRepository.save(new User("User4", "Password4", "NickName4"));
             logger.info(usersRepository.findAll());
             usersRepository.deleteById(3L);
             logger.info(usersRepository.findAll());
             usersRepository.deleteAll();
             logger.info(usersRepository.findAll());
-            usersRepository.save(new User(null, "User5", "Password5", "NickName5"));
+            usersRepository.save(new User("User5", "Password5", "NickName5"));
             logger.info(usersRepository.findAll());
         } catch (SQLException e) {
             logger.error(e.getMessage());
