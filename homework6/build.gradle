@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group = 'ru.otus.java.pro.design_patterns'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation group: 'org.jetbrains', name: 'annotations', version: '24.1.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
+    // https://mvnrepository.com/artifact/net.datafaker/datafaker
+    implementation group: 'net.datafaker', name: 'datafaker', version: '2.4.1'
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.4'
+}
+
+test {
+    useJUnitPlatform()
+}
