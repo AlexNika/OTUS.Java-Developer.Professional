@@ -61,7 +61,7 @@ public class ProductController {
         return product;
     }
 
-    @DeleteMapping
+    @DeleteMapping("/by-ids")
     public void deleteMany(@RequestParam List<Long> ids) {
         productRepository.deleteAllById(ids);
     }

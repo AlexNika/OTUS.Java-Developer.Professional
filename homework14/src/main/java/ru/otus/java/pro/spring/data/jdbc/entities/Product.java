@@ -12,7 +12,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table(name = "products")
 public class Product {
     @Id
-    private final Long id;
-    private final String title;
-    private final int price;
+    private Long id;
+    private String title;
+    private int price;
 }
