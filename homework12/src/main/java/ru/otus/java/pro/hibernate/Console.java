@@ -113,8 +113,8 @@ public class Console {
         out.println("3. Find client by id");
         out.println("4. Find product by id");
         out.println("5. Find product by name");
-        out.println("6. Найти все продукты, которые купил клиент");
-        out.println("7. Найти клиентов, которые купили продукт");
+        out.println("6. Find all products that the client has bought");
+        out.println("7. Find all clients who bought the product");
         out.println("8. Delete client by id");
         out.println("9. Delete all clients");
         out.println("10. Delete product by id");
