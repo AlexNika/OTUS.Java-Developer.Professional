@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+                                 https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="HW13" transaction-type="RESOURCE_LOCAL">
+        <description>Hibernate JPA Configuration</description>
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <!-- (1) Сущности -->
+        <class>ru.otus.java.pro.jpql.entities.Client</class>
+        <class>ru.otus.java.pro.jpql.entities.Address</class>
+        <class>ru.otus.java.pro.jpql.entities.Phone</class>
+
+        <!-- (2) Настройки подключения -->
+        <properties>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/homework13"/>
+            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="example"/>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+
+            <!-- (3) Настройки Hibernate -->
+            <!-- с версии Hibernate 5.x не указывается: <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/> -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+
+            <!-- (4) Логирование SQL запросов -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+
+            <!-- (5) Параметры пула HikariCP -->
+
+            <property name="hibernate.hikari.minimumIdle" value="5"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="20"/>
+            <property name="hibernate.hikari.idleTimeout" value="30000"/>
+            <property name="hibernate.hikari.connectionTimeout" value="30000"/>
+            <property name="hibernate.hikari.autoCommit" value="true"/>
+            <property name="hibernate.current_session_context_class" value="thread"/>
+            <property name="hibernate.connection.release_mode" value="after_transaction"/>
+
+        </properties>
+    </persistence-unit>
+</persistence>
