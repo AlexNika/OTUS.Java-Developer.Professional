@@ -14,13 +14,13 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 public class Homework13Application {
-    private static final String CLASSNAME = MethodHandles.lookup().lookupClass().getSimpleName();
-    private static final Logger LOGGER = LoggerFactory.getLogger(CLASSNAME);
+    private static final String CLASS_NAME = MethodHandles.lookup().lookupClass().getSimpleName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(CLASS_NAME);
 
     private static final String PERSISTENCE_UNIT_NAME = "HW13";
 
     public static void main(String[] args) {
-        LOGGER.info("{} started", CLASSNAME);
+        LOGGER.info("{} started", CLASS_NAME);
 
         try (EntityManagerFactory emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME)) {
             try (EntityManager entityManager = emf.createEntityManager()) {
@@ -32,8 +32,8 @@ public class Homework13Application {
                 clients.forEach(c -> LOGGER.info("{}", c));
             }
         } catch (IllegalArgumentException | PersistenceException e) {
-            LOGGER.error("Something went wrong when running application {}", CLASSNAME, e);
+            LOGGER.error("Something went wrong when running application {}", CLASS_NAME, e);
         }
-        LOGGER.info("{} finished", CLASSNAME);
+        LOGGER.info("{} finished", CLASS_NAME);
     }
 }

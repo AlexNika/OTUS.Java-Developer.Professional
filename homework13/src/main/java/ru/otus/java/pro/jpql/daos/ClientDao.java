@@ -21,7 +21,7 @@ public class ClientDao {
         try {
             transaction.begin();
             clients = entityManager
-                    .createQuery("from " + Client.class.getSimpleName(), Client.class)
+                    .createQuery("SELECT c FROM Client c", Client.class)
                     .getResultList();
             transaction.commit();
         } catch (Exception e) {

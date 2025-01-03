@@ -21,11 +21,11 @@ public class Client {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @OneToOne(mappedBy = "client", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @PrimaryKeyJoinColumn
     private Address address;
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Phone> phones;
 
     @Override
