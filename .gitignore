@@ -43,3 +43,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+/homework11/src/main/resources/h2-2.1.210/h2-2.1.210.jar
+/homework11/src/main/resources/h2-2.1.210/h2-license-epl10.txt
+/homework11/src/main/resources/h2-2.1.210/h2-license-mpl20.txt
+/homework7/src/main/resources/db.mv.db
