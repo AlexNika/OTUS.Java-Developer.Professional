@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <!--    <Properties>-->
+    <!--        <Property name="APP_BASE" value="."/>-->
+    <!--        <Property name="logging.dir" value="${env:APP_BASE}/logs"/>-->
+    <!--        <Property name="logging.file" value="${logging.dir}/log.log"/>-->
+    <!--    </Properties>-->
+    <Properties>
+        <Property name="basePath" value="logs"/>
+    </Properties>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p %d{yyyy-MM-dd HH:mm:ss} [%t] %C (%F:%L) - %m%n"/>
+        </Console>
+        <RollingFile name="RollingFILE" fileName="${basePath}/hw12.log"
+                     filePattern="${basePath}/$${date:yyyy-MM}/hw12-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%-5p %d{yyyy-MM-dd HH:mm:ss} [%t] %C (%F:%L) - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <!--            <AppenderRef ref="STDOUT"/>-->
+            <AppenderRef ref="RollingFILE"/>
+        </Root>
+    </Loggers>
+</Configuration>
