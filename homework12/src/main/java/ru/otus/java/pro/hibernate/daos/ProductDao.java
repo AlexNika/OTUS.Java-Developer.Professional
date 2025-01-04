@@ -28,7 +28,7 @@ public class ProductDao extends AbstractDao<Product> {
             logger.warn("There is no product with id={} in the database", productId);
             return clientProductList;
         }
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             clientProductList.addAll(productOrNull.getClients());
             session.getTransaction().commit();
@@ -41,7 +41,7 @@ public class ProductDao extends AbstractDao<Product> {
 
     public Optional<Product> findProductByTitle(String title) {
         Optional<Product> productOptional = Optional.empty();
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             productOptional = session.bySimpleNaturalId(Product.class).loadOptional(title);
             session.getTransaction().commit();

@@ -31,7 +31,6 @@ public class Console {
             while (consoleActive) {
                 out.print("Please select the menu item: ");
                 consoleActive = isConsoleActive(scanner);
-                out.println();
             }
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException e) {
             logger.error("The error occurs when trying to read scanner input: {}", e.getMessage());
@@ -119,7 +118,6 @@ public class Console {
         out.println("9. Delete all clients");
         out.println("10. Delete product by id");
         out.println("11. Delete all products");
-        out.println("0. Exit");
-        out.println();
+        out.println("0. Exit\n");
     }
 }

@@ -27,7 +27,7 @@ public class ClientDao extends AbstractDao<Client> {
             logger.warn("There is no client with id={} in the database", clientId);
             return clientProductList;
         }
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             clientProductList.addAll(clientOrNull.getProducts());
             session.getTransaction().commit();

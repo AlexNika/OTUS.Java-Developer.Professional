@@ -17,7 +17,7 @@ public abstract class AbstractDao<T> {
 
     public List<T> findAll() {
         List<T> result = null;
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             result = session.createQuery("from " + cls.getSimpleName(), cls)
                     .getResultList();
@@ -31,7 +31,7 @@ public abstract class AbstractDao<T> {
 
     public T findById(Long id) {
         T result = null;
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             result = session.get(cls, id);
             session.getTransaction().commit();
@@ -48,7 +48,7 @@ public abstract class AbstractDao<T> {
             logger.warn("Can't ave or update null object");
             return null;
         }
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             session.merge(obj);
             session.getTransaction().commit();
@@ -64,7 +64,7 @@ public abstract class AbstractDao<T> {
             logger.warn("Can't deleteObject null object");
             return;
         }
-        try (Session session = sf.getCurrentSession()) {
+        try (Session session = sf.openSession()) {
             session.beginTransaction();
             session.remove(obj);
             session.getTransaction().commit();
