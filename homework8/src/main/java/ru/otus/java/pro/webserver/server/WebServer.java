@@ -39,7 +39,9 @@ public class WebServer {
         try (ServerSocket serverSocket = new ServerSocket()) {
             serverSocket.setReceiveBufferSize(requestSize);
             serverSocket.bind(new InetSocketAddress(serverIpAddress, serverPort));
-            try (ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize)) {
+            ExecutorService threadPool = null;
+            try {
+                threadPool = Executors.newFixedThreadPool(threadPoolSize);
                 while (serverSocket.isBound() && !serverSocket.isClosed()) {
                     Socket clientSocket = serverSocket.accept();
                     clientSocket.setReceiveBufferSize(requestSize);
@@ -50,6 +52,8 @@ public class WebServer {
                     }
                     threadPool.execute(new RequestHandler(clientSocket, dispatcher));
                 }
+            } finally {
+                if (threadPool != null) threadPool.shutdown();
             }
         } catch (IOException e) {
             logger.error("Socket accept error on the Web Server - Host: {}, Port: {}.", serverIpAddress,
